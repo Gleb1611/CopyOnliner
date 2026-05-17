@@ -1,0 +1,301 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "System.Collections.Immutable/9.0.4": {
+        "runtime": {
+          "lib/net9.0/System.Collections.Immutable.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.425.16305"
+          }
+        }
+      },
+      "System.ComponentModel.Annotations/5.0.0": {
+        "runtime": {
+          "lib/netstandard2.1/System.ComponentModel.Annotations.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.51904"
+          }
+        }
+      },
+      "System.Configuration.ConfigurationManager/10.0.8": {
+        "dependencies": {
+          "System.Diagnostics.EventLog": "10.0.8",
+          "System.Security.Cryptography.ProtectedData": "10.0.8"
+        },
+        "runtime": {
+          "lib/net9.0/System.Configuration.ConfigurationManager.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "System.Data.OleDb/10.0.8": {
+        "dependencies": {
+          "System.Configuration.ConfigurationManager": "10.0.8",
+          "System.Diagnostics.PerformanceCounter": "10.0.8"
+        },
+        "runtime": {
+          "lib/net9.0/System.Data.OleDb.dll": {
+            "assemblyVersion": "10.0.0.8",
+            "fileVersion": "10.0.826.23019"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net9.0/System.Data.OleDb.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.8",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "System.Diagnostics.EventLog/10.0.8": {
+        "runtime": {
+          "lib/net9.0/System.Diagnostics.EventLog.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net9.0/System.Diagnostics.EventLog.Messages.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win/lib/net9.0/System.Diagnostics.EventLog.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "System.Diagnostics.PerformanceCounter/10.0.8": {
+        "dependencies": {
+          "System.Configuration.ConfigurationManager": "10.0.8",
+          "System.Threading.AccessControl": "10.0.8"
+        },
+        "runtime": {
+          "lib/net9.0/System.Diagnostics.PerformanceCounter.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net9.0/System.Diagnostics.PerformanceCounter.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "System.Runtime.Caching/9.0.4": {
+        "dependencies": {
+          "System.Configuration.ConfigurationManager": "10.0.8"
+        },
+        "runtime": {
+          "lib/net9.0/System.Runtime.Caching.dll": {
+            "assemblyVersion": "9.0.0.4",
+            "fileVersion": "9.0.425.16305"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net9.0/System.Runtime.Caching.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.4",
+            "fileVersion": "9.0.425.16305"
+          }
+        }
+      },
+      "System.Security.Cryptography.ProtectedData/10.0.8": {
+        "runtime": {
+          "lib/net9.0/System.Security.Cryptography.ProtectedData.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "System.Threading.AccessControl/10.0.8": {
+        "runtime": {
+          "lib/net9.0/System.Threading.AccessControl.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net9.0/System.Threading.AccessControl.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.826.23019"
+          }
+        }
+      },
+      "Tortuga.Anchor/5.0.0": {
+        "dependencies": {
+          "System.Collections.Immutable": "9.0.4",
+          "System.ComponentModel.Annotations": "5.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Tortuga.Anchor.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.0.0"
+          }
+        }
+      },
+      "Tortuga.Chain.Core/5.8.0": {
+        "dependencies": {
+          "System.Runtime.Caching": "9.0.4",
+          "Tortuga.Anchor": "5.0.0",
+          "Tortuga.Shipwright.Shared": "0.12.0"
+        },
+        "runtime": {
+          "lib/net8.0/Tortuga.Chain.Core.dll": {
+            "assemblyVersion": "5.8.0.0",
+            "fileVersion": "5.8.0.0"
+          }
+        }
+      },
+      "Tortuga.Chain.Core.OleDb/5.8.0": {
+        "dependencies": {
+          "System.Data.OleDb": "10.0.8",
+          "Tortuga.Chain.Core": "5.8.0"
+        },
+        "runtime": {
+          "lib/net8.0/Tortuga.Chain.Core.OleDb.dll": {
+            "assemblyVersion": "5.8.0.0",
+            "fileVersion": "5.8.0.0"
+          }
+        }
+      },
+      "Tortuga.Chain.SqlServer.OleDb/5.8.0": {
+        "dependencies": {
+          "Tortuga.Chain.Core.OleDb": "5.8.0",
+          "Tortuga.Shipwright.Shared": "0.12.0"
+        },
+        "runtime": {
+          "lib/net8.0/Tortuga.Chain.SqlServer.OleDb.dll": {
+            "assemblyVersion": "5.8.0.0",
+            "fileVersion": "5.8.0.0"
+          }
+        }
+      },
+      "Tortuga.Shipwright.Shared/0.12.0": {
+        "runtime": {
+          "lib/netstandard2.0/Tortuga.Shipwright.Shared.dll": {
+            "assemblyVersion": "0.12.0.0",
+            "fileVersion": "0.12.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "System.Collections.Immutable/9.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-wfm2NgK22MmBe5qJjp52qzpkeDZKb4l9LbdubhZSehY1z4LS+lld6R+B+UQNb2AZRHu/QJlHxEUcRst5hIEejg==",
+      "path": "system.collections.immutable/9.0.4",
+      "hashPath": "system.collections.immutable.9.0.4.nupkg.sha512"
+    },
+    "System.ComponentModel.Annotations/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dMkqfy2el8A8/I76n2Hi1oBFEbG1SfxD2l5nhwXV3XjlnOmwxJlQbYpJH4W51odnU9sARCSAgv7S3CyAFMkpYg==",
+      "path": "system.componentmodel.annotations/5.0.0",
+      "hashPath": "system.componentmodel.annotations.5.0.0.nupkg.sha512"
+    },
+    "System.Configuration.ConfigurationManager/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QG+HHwJjLyUiRuA9axr5pDqHAxboo7FXCTRakxMABE9CUAUij/tsd/MsgQPJUEppkf+YBLT+F/P/wKIVCAIcNg==",
+      "path": "system.configuration.configurationmanager/10.0.8",
+      "hashPath": "system.configuration.configurationmanager.10.0.8.nupkg.sha512"
+    },
+    "System.Data.OleDb/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QZnhynkA7p7clCHWsQMpnjNGMHSprCI9lYcJp39PyiA1inS98WpkcxWO00/dCljoMG++ujUq0S2ezBrqbMRrQg==",
+      "path": "system.data.oledb/10.0.8",
+      "hashPath": "system.data.oledb.10.0.8.nupkg.sha512"
+    },
+    "System.Diagnostics.EventLog/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+Ro7WgIom+BDNH+YhTuZKL6QJ0ctfOpTyfUG/h3aU5KwXt3OaNf0wYWrTvoBUj+34Dy5V8dN9yCco1hAJQ4txw==",
+      "path": "system.diagnostics.eventlog/10.0.8",
+      "hashPath": "system.diagnostics.eventlog.10.0.8.nupkg.sha512"
+    },
+    "System.Diagnostics.PerformanceCounter/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-A/ojGlB+iMz6FU7gC2lNIF7TmtnBhvb1nf/yXYFXdF2oxrr4myrCRj/i1HZXeJepZ7iDmnRmXyG6gMFdf1Kjew==",
+      "path": "system.diagnostics.performancecounter/10.0.8",
+      "hashPath": "system.diagnostics.performancecounter.10.0.8.nupkg.sha512"
+    },
+    "System.Runtime.Caching/9.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ePDc9MvE/9QXeY6lU4Y85hjOSRzqdDF1XlqINhpThLKV33PYC2fLu/fadwDCWplq3mSef7Fof3vui3FUWpUp6w==",
+      "path": "system.runtime.caching/9.0.4",
+      "hashPath": "system.runtime.caching.9.0.4.nupkg.sha512"
+    },
+    "System.Security.Cryptography.ProtectedData/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/ldVgSfImIBp6fLWS7sLH0BnmtFj0ZwGlZo4Xx2q0K3ZhJNDbW45kj2f6zPoC+L+BTINuHdMzTsopuwmkbgcNA==",
+      "path": "system.security.cryptography.protecteddata/10.0.8",
+      "hashPath": "system.security.cryptography.protecteddata.10.0.8.nupkg.sha512"
+    },
+    "System.Threading.AccessControl/10.0.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dDz/L7x/iTFxnBRO45FIITCTYdKfuZ1/ze75LprWXQtmJwoCOmN0lnJIDp/OecFxm016zy4MSF0UjRQrN8xKmA==",
+      "path": "system.threading.accesscontrol/10.0.8",
+      "hashPath": "system.threading.accesscontrol.10.0.8.nupkg.sha512"
+    },
+    "Tortuga.Anchor/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RB7b5y8kpFHMsl+iH+Al96FXaTBuohBeYf9FxNMHrr9vXeIR2L6kboponC4SBbQWlvYG4u6wL3HheC6gVCkauA==",
+      "path": "tortuga.anchor/5.0.0",
+      "hashPath": "tortuga.anchor.5.0.0.nupkg.sha512"
+    },
+    "Tortuga.Chain.Core/5.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2VskyGqonE8+myZW/JyR9H9NTl484qct4j0WKoHXtevtcFOgY5Hmc674UWs1o9cful5+i8xFKg1YsJg3igkQ5Q==",
+      "path": "tortuga.chain.core/5.8.0",
+      "hashPath": "tortuga.chain.core.5.8.0.nupkg.sha512"
+    },
+    "Tortuga.Chain.Core.OleDb/5.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9saUs4UPdb3QGAswzwkeFRNobYvwd8UMeeorqsDJ9xe5oBCxirAbTH4wTCDf3/iYIquGqyVdGh9CpvwbE90V8w==",
+      "path": "tortuga.chain.core.oledb/5.8.0",
+      "hashPath": "tortuga.chain.core.oledb.5.8.0.nupkg.sha512"
+    },
+    "Tortuga.Chain.SqlServer.OleDb/5.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hOr8N2blIYyBzV1FTo4N/NoYNSgq1cO/ixQ8VxHg7B1DTYj0oX5aspGxgQRZw5/6JVysnJe+Yi5OPhYaSDr0OA==",
+      "path": "tortuga.chain.sqlserver.oledb/5.8.0",
+      "hashPath": "tortuga.chain.sqlserver.oledb.5.8.0.nupkg.sha512"
+    },
+    "Tortuga.Shipwright.Shared/0.12.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-v8yuUXsUKjxZRzzfuyPX7E6UHVNHWzB7XA7SDzp6OoghQPqUT5sDBuqacTe1lyt8xt1E1TOra7GGDA6N0N+nhQ==",
+      "path": "tortuga.shipwright.shared/0.12.0",
+      "hashPath": "tortuga.shipwright.shared.0.12.0.nupkg.sha512"
+    }
+  }
+}
