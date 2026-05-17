@@ -37,10 +37,9 @@
             // listView1
             // 
             listView1.Columns.AddRange(new ColumnHeader[] { Icon });
-            listView1.Dock = DockStyle.Fill;
-            listView1.Location = new Point(0, 0);
+            listView1.Location = new Point(191, 56);
             listView1.Name = "listView1";
-            listView1.Size = new Size(800, 476);
+            listView1.Size = new Size(609, 420);
             listView1.TabIndex = 0;
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;

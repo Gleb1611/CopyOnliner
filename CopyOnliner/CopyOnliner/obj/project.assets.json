@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
-    "net9.0-windows7.0": {
+    "net9.0-windows": {
       "System.Collections.Immutable/9.0.4": {
         "type": "package",
         "compile": {
@@ -704,7 +704,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net9.0-windows7.0": [
+    "net9.0-windows": [
       "System.Data.OleDb >= 10.0.8",
       "Tortuga.Chain.SqlServer.OleDb >= 5.8.0"
     ]
@@ -716,11 +716,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Информатика\\Курсовая\\CopyOnliner\\CopyOnliner\\CopyOnliner.csproj",
+      "projectUniqueName": "F:\\Информатика\\Курсовая\\CopyOnliner-main\\CopyOnliner\\CopyOnliner\\CopyOnliner.csproj",
       "projectName": "CopyOnliner",
-      "projectPath": "F:\\Информатика\\Курсовая\\CopyOnliner\\CopyOnliner\\CopyOnliner.csproj",
+      "projectPath": "F:\\Информатика\\Курсовая\\CopyOnliner-main\\CopyOnliner\\CopyOnliner\\CopyOnliner.csproj",
       "packagesPath": "C:\\Users\\Tery\\.nuget\\packages\\",
-      "outputPath": "F:\\Информатика\\Курсовая\\CopyOnliner\\CopyOnliner\\obj\\",
+      "outputPath": "F:\\Информатика\\Курсовая\\CopyOnliner-main\\CopyOnliner\\CopyOnliner\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -738,7 +738,8 @@
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net9.0-windows7.0": {
+        "net9.0-windows": {
+          "framework": "net9.0-windows7.0",
           "targetAlias": "net9.0-windows",
           "projectReferences": {}
         }
@@ -753,10 +754,11 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
-      "net9.0-windows7.0": {
+      "net9.0-windows": {
+        "framework": "net9.0-windows7.0",
         "targetAlias": "net9.0-windows",
         "dependencies": {
           "System.Data.OleDb": {
@@ -787,7 +789,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
