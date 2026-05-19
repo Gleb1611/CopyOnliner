@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "OcfD4gbZ8HE=",
+  "success": true,
+  "projectFilePath": "F:\\Информатика\\Курсовая\\CopyOnliner\\CopyOnliner\\CopyOnliner\\CopyOnliner.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Tery\\.nuget\\packages\\system.collections.immutable\\9.0.4\\system.collections.immutable.9.0.4.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.configuration.configurationmanager\\10.0.8\\system.configuration.configurationmanager.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.data.oledb\\10.0.8\\system.data.oledb.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.8\\system.diagnostics.eventlog.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.diagnostics.performancecounter\\10.0.8\\system.diagnostics.performancecounter.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.runtime.caching\\9.0.4\\system.runtime.caching.9.0.4.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.security.cryptography.protecteddata\\10.0.8\\system.security.cryptography.protecteddata.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\system.threading.accesscontrol\\10.0.8\\system.threading.accesscontrol.10.0.8.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\tortuga.anchor\\5.0.0\\tortuga.anchor.5.0.0.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\tortuga.chain.core\\5.8.0\\tortuga.chain.core.5.8.0.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\tortuga.chain.core.oledb\\5.8.0\\tortuga.chain.core.oledb.5.8.0.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\tortuga.chain.sqlserver.oledb\\5.8.0\\tortuga.chain.sqlserver.oledb.5.8.0.nupkg.sha512",
+    "C:\\Users\\Tery\\.nuget\\packages\\tortuga.shipwright.shared\\0.12.0\\tortuga.shipwright.shared.0.12.0.nupkg.sha512"
+  ],
+  "logs": []
+}
