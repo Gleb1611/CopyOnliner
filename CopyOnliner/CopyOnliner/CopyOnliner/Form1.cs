@@ -14,44 +14,47 @@ namespace CopyOnliner
     public partial class Form1 : Form
     {
         public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=OnlinerConsoles.accdb;";
+        public static User CurrentUser { get; set; }
+
         private OleDbConnection myConnection;
         private Panel searchPanel;
         private TextBox txtSearchModel;
-        private Button btnSearch;
+        private Button btnProfile;
         private Button btnReset;
         private Label lblResults;
-        private CheckedListBox chkListShops;
-        private Label lblShops;
-        private NumericUpDown numPriceFrom;
-        private NumericUpDown numPriceTo;
-        private Label lblPrice;
         private System.Windows.Forms.Timer searchTimer;
         private ListBox listBoxBrands;
+
+        // Фильтр по магазинам
+        private CheckedListBox chkListShops;
+
         private Label lblBrand;
-
-        private Label lblSortBy;
-        private CheckedListBox chkListSortOptions;
-        private RadioButton rbAscending;
-        private RadioButton rbDescending;
-        private Button btnApplySort;
-
-        private GroupBox groupBoxSpecs;
-        private TextBox txtScreenSize;
-        private TextBox txtResolution;
-        private TextBox txtStorage;
-        private TextBox txtRAM;
-        private TextBox txtProcessor;
-        private TextBox txtBattery;
-        private ComboBox cmbOS;
-
+        private Label lblModel;
+        private Label lblPrice;
         private Label lblScreenSize;
         private Label lblResolution;
         private Label lblStorage;
         private Label lblRAM;
         private Label lblProcessor;
-        private Label lblBattery;
         private Label lblOS;
-        private Label lblModel;
+        private Label lblColor;
+        private Label lblShops;
+
+        private NumericUpDown numPriceFrom;
+        private NumericUpDown numPriceTo;
+        private NumericUpDown numScreenSizeFrom;
+        private NumericUpDown numScreenSizeTo;
+        private TextBox txtResolution;
+        private CheckedListBox chkListStorage;
+        private CheckedListBox chkListRAM;
+        private CheckedListBox chkListColors;
+        private ComboBox cmbProcessor;
+        private ComboBox cmbOS;
+        private CheckedListBox chkListSortOptions;
+        private RadioButton rbAscending;
+        private RadioButton rbDescending;
+
+        private Button btnApply;
 
         // Геймерская цветовая палитра
         private Color darkBg = Color.FromArgb(15, 25, 35);
@@ -69,6 +72,13 @@ namespace CopyOnliner
         {
             InitializeComponent();
 
+            // Включаем двойную буферизацию для устранения мерцания
+            this.SetStyle(ControlStyles.DoubleBuffer |
+                          ControlStyles.UserPaint |
+                          ControlStyles.AllPaintingInWmPaint |
+                          ControlStyles.ResizeRedraw, true);
+            this.UpdateStyles();
+
             this.BackColor = darkBg;
             this.WindowState = FormWindowState.Maximized;
             this.Font = new Font("Segoe UI", 10, FontStyle.Regular);
@@ -80,12 +90,13 @@ namespace CopyOnliner
             SetupListView();
             InitializeSearchPanel();
 
+            UpdateProfileButton();
+
             try
             {
                 myConnection = new OleDbConnection(connectionString);
                 myConnection.Open();
                 LoadFilters();
-                LoadOSOptions();
                 LoadData();
             }
             catch (Exception ex)
@@ -95,10 +106,28 @@ namespace CopyOnliner
             }
         }
 
+        private void UpdateProfileButton()
+        {
+            if (btnProfile != null)
+            {
+                if (CurrentUser != null && CurrentUser.IsLoggedIn)
+                {
+                    btnProfile.Text = $"👤 {CurrentUser.Username}";
+                    btnProfile.BackColor = accentColor;
+                }
+                else
+                {
+                    btnProfile.Text = "👤 ВОЙТИ";
+                    btnProfile.BackColor = accentBlue;
+                }
+            }
+        }
+
         private void LoadFilters()
         {
             try
             {
+                // Загружаем бренды
                 string brandQuery = "SELECT DISTINCT Brand FROM Consoles WHERE Brand IS NOT NULL ORDER BY Brand";
                 OleDbCommand cmd = new OleDbCommand(brandQuery, myConnection);
                 OleDbDataReader reader = cmd.ExecuteReader();
@@ -109,40 +138,94 @@ namespace CopyOnliner
                 }
                 reader.Close();
 
+                // Загружаем магазины
                 string shopQuery = "SELECT ShopID, ShopName FROM Shops ORDER BY ShopName";
                 cmd = new OleDbCommand(shopQuery, myConnection);
                 reader = cmd.ExecuteReader();
-
                 while (reader.Read())
                 {
-                    chkListShops.Items.Add(new ShopItem
-                    {
-                        ShopID = Convert.ToInt32(reader["ShopID"]),
-                        ShopName = reader["ShopName"].ToString()
-                    });
+                    string shopName = reader["ShopName"].ToString();
+                    if (!string.IsNullOrEmpty(shopName))
+                        chkListShops.Items.Add(shopName);
+                }
+                reader.Close();
+
+                // Загружаем память
+                string storageQuery = "SELECT DISTINCT Storage FROM Consoles WHERE Storage IS NOT NULL ORDER BY Storage";
+                cmd = new OleDbCommand(storageQuery, myConnection);
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    string storage = reader["Storage"].ToString();
+                    if (!string.IsNullOrEmpty(storage))
+                        chkListStorage.Items.Add(storage);
+                }
+                reader.Close();
+
+                // Загружаем ОЗУ
+                string ramQuery = "SELECT DISTINCT RAM FROM Consoles WHERE RAM IS NOT NULL ORDER BY RAM";
+                cmd = new OleDbCommand(ramQuery, myConnection);
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    string ram = reader["RAM"].ToString();
+                    if (!string.IsNullOrEmpty(ram))
+                        chkListRAM.Items.Add(ram);
+                }
+                reader.Close();
+
+                // Загружаем процессоры
+                string processorQuery = "SELECT DISTINCT Processor FROM Consoles WHERE Processor IS NOT NULL ORDER BY Processor";
+                cmd = new OleDbCommand(processorQuery, myConnection);
+                reader = cmd.ExecuteReader();
+                cmbProcessor.Items.Add("Все");
+                while (reader.Read())
+                {
+                    string processor = reader["Processor"].ToString();
+                    if (!string.IsNullOrEmpty(processor))
+                        cmbProcessor.Items.Add(processor);
+                }
+                reader.Close();
+                cmbProcessor.SelectedIndex = 0;
+
+                // Загружаем ОС
+                string osQuery = "SELECT DISTINCT OS FROM Consoles WHERE OS IS NOT NULL ORDER BY OS";
+                cmd = new OleDbCommand(osQuery, myConnection);
+                reader = cmd.ExecuteReader();
+                cmbOS.Items.Add("Все");
+                while (reader.Read())
+                {
+                    string os = reader["OS"].ToString();
+                    if (!string.IsNullOrEmpty(os))
+                        cmbOS.Items.Add(os);
+                }
+                reader.Close();
+                cmbOS.SelectedIndex = 0;
+
+                // Загружаем цвета
+                string colorQuery = "SELECT DISTINCT Color FROM Consoles WHERE Color IS NOT NULL AND Color <> '' ORDER BY Color";
+                cmd = new OleDbCommand(colorQuery, myConnection);
+                reader = cmd.ExecuteReader();
+                chkListColors.Items.Clear();
+                while (reader.Read())
+                {
+                    string color = reader["Color"].ToString();
+                    if (!string.IsNullOrEmpty(color))
+                        chkListColors.Items.Add(color);
                 }
                 reader.Close();
             }
             catch
             {
+                // Демо-данные для фильтров
                 listBoxBrands.Items.AddRange(new string[] { "Sony", "Microsoft", "Nintendo", "Valve", "ASUS" });
-                chkListShops.Items.Add(new ShopItem { ShopID = 1, ShopName = "Agroup" });
-                chkListShops.Items.Add(new ShopItem { ShopID = 2, ShopName = "GAMEPARK" });
-                chkListShops.Items.Add(new ShopItem { ShopID = 3, ShopName = "Newton" });
-            }
-        }
-
-        private void LoadOSOptions()
-        {
-            if (cmbOS != null)
-            {
-                cmbOS.Items.Add("Все");
-                cmbOS.Items.Add("Windows");
-                cmbOS.Items.Add("PlayStation OS");
-                cmbOS.Items.Add("Xbox OS");
-                cmbOS.Items.Add("Nintendo OS");
-                cmbOS.Items.Add("SteamOS");
-                cmbOS.Items.Add("Android");
+                chkListShops.Items.AddRange(new string[] { "Agroup", "GAMEPARK", "Newton" });
+                chkListStorage.Items.AddRange(new string[] { "64", "128", "256", "512", "825", "1024" });
+                chkListRAM.Items.AddRange(new string[] { "4", "8", "16", "32" });
+                cmbProcessor.Items.AddRange(new string[] { "Все", "AMD Zen 2", "AMD APU", "AMD Z1 Extreme", "NVIDIA Tegra" });
+                cmbOS.Items.AddRange(new string[] { "Все", "PlayStation OS", "Xbox OS", "Nintendo OS", "SteamOS", "Windows 11" });
+                chkListColors.Items.AddRange(new string[] { "Черный", "Белый", "Серый", "Красный", "Синий", "Фиолетовый" });
+                cmbProcessor.SelectedIndex = 0;
                 cmbOS.SelectedIndex = 0;
             }
         }
@@ -151,7 +234,7 @@ namespace CopyOnliner
         {
             searchPanel = new Panel();
             searchPanel.Dock = DockStyle.Left;
-            searchPanel.Width = 380;
+            searchPanel.Width = 420;
             searchPanel.BackColor = panelBg;
             searchPanel.Padding = new Padding(15);
             searchPanel.ForeColor = textColor;
@@ -159,27 +242,41 @@ namespace CopyOnliner
 
             int yOffset = 10;
 
+            // Кнопка профиля
+            btnProfile = new Button();
+            btnProfile.Text = "👤 ВОЙТИ";
+            btnProfile.Location = new Point(290, 10);
+            btnProfile.Size = new Size(110, 35);
+            btnProfile.BackColor = accentBlue;
+            btnProfile.ForeColor = Color.Black;
+            btnProfile.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            btnProfile.FlatStyle = FlatStyle.Flat;
+            btnProfile.Cursor = Cursors.Hand;
+            btnProfile.Click += BtnProfile_Click;
+            searchPanel.Controls.Add(btnProfile);
+
             Label lblTitle = new Label();
             lblTitle.Text = "⚡ ИГРОВОЙ КАТАЛОГ";
-            lblTitle.Location = new Point(15, yOffset);
-            lblTitle.Size = new Size(350, 35);
+            lblTitle.Location = new Point(15, 10);
+            lblTitle.Size = new Size(260, 35);
             lblTitle.Font = new Font("Segoe UI", 14, FontStyle.Bold);
             lblTitle.ForeColor = accentColor;
             lblTitle.TextAlign = ContentAlignment.MiddleCenter;
             searchPanel.Controls.Add(lblTitle);
-            yOffset += 45;
+            yOffset = 55;
 
             Panel separator = new Panel();
             separator.BackColor = accentColor;
             separator.Location = new Point(15, yOffset);
-            separator.Size = new Size(350, 2);
+            separator.Size = new Size(390, 2);
             searchPanel.Controls.Add(separator);
             yOffset += 15;
 
+            // Бренды
             lblBrand = new Label();
             lblBrand.Text = "🔍 БРЕНД (выберите несколько)";
             lblBrand.Location = new Point(15, yOffset);
-            lblBrand.Size = new Size(350, 25);
+            lblBrand.Size = new Size(390, 25);
             lblBrand.Font = new Font("Segoe UI", 10, FontStyle.Bold);
             lblBrand.ForeColor = accentBlue;
             searchPanel.Controls.Add(lblBrand);
@@ -187,20 +284,20 @@ namespace CopyOnliner
 
             listBoxBrands = new ListBox();
             listBoxBrands.Location = new Point(15, yOffset);
-            listBoxBrands.Size = new Size(350, 100);
+            listBoxBrands.Size = new Size(390, 80);
             listBoxBrands.BackColor = darkBg;
             listBoxBrands.ForeColor = textColor;
             listBoxBrands.BorderStyle = BorderStyle.FixedSingle;
             listBoxBrands.SelectionMode = SelectionMode.MultiExtended;
             listBoxBrands.Font = new Font("Segoe UI", 10);
-            listBoxBrands.Click += (s, e) => LoadData();
             searchPanel.Controls.Add(listBoxBrands);
-            yOffset += 110;
+            yOffset += 90;
 
+            // Модель
             lblModel = new Label();
-            lblModel.Text = "🎮 МОДЕЛЬ";
+            lblModel.Text = "🎮 МОДЕЛЬ (поиск по названию)";
             lblModel.Location = new Point(15, yOffset);
-            lblModel.Size = new Size(350, 25);
+            lblModel.Size = new Size(390, 25);
             lblModel.Font = new Font("Segoe UI", 10, FontStyle.Bold);
             lblModel.ForeColor = accentBlue;
             searchPanel.Controls.Add(lblModel);
@@ -208,7 +305,7 @@ namespace CopyOnliner
 
             txtSearchModel = new TextBox();
             txtSearchModel.Location = new Point(15, yOffset);
-            txtSearchModel.Size = new Size(350, 30);
+            txtSearchModel.Size = new Size(390, 30);
             txtSearchModel.Font = new Font("Segoe UI", 11);
             txtSearchModel.BackColor = darkBg;
             txtSearchModel.ForeColor = textColor;
@@ -217,10 +314,11 @@ namespace CopyOnliner
             searchPanel.Controls.Add(txtSearchModel);
             yOffset += 40;
 
+            // Цена
             lblPrice = new Label();
             lblPrice.Text = "💰 ЦЕНА (руб.)";
             lblPrice.Location = new Point(15, yOffset);
-            lblPrice.Size = new Size(350, 25);
+            lblPrice.Size = new Size(390, 25);
             lblPrice.Font = new Font("Segoe UI", 10, FontStyle.Bold);
             lblPrice.ForeColor = accentBlue;
             searchPanel.Controls.Add(lblPrice);
@@ -235,36 +333,197 @@ namespace CopyOnliner
 
             numPriceFrom = new NumericUpDown();
             numPriceFrom.Location = new Point(45, yOffset);
-            numPriceFrom.Size = new Size(130, 27);
+            numPriceFrom.Size = new Size(150, 27);
             numPriceFrom.BackColor = darkBg;
             numPriceFrom.ForeColor = textColor;
             numPriceFrom.Maximum = 1000000;
             numPriceFrom.ThousandsSeparator = true;
-            numPriceFrom.ValueChanged += TxtSearch_TextChanged;
             searchPanel.Controls.Add(numPriceFrom);
 
             Label lblTo = new Label();
             lblTo.Text = "до";
-            lblTo.Location = new Point(185, yOffset);
+            lblTo.Location = new Point(205, yOffset);
             lblTo.Size = new Size(30, 25);
             lblTo.ForeColor = textColor;
             searchPanel.Controls.Add(lblTo);
 
             numPriceTo = new NumericUpDown();
-            numPriceTo.Location = new Point(215, yOffset);
-            numPriceTo.Size = new Size(150, 27);
+            numPriceTo.Location = new Point(235, yOffset);
+            numPriceTo.Size = new Size(170, 27);
             numPriceTo.BackColor = darkBg;
             numPriceTo.ForeColor = textColor;
             numPriceTo.Maximum = 1000000;
             numPriceTo.ThousandsSeparator = true;
-            numPriceTo.ValueChanged += TxtSearch_TextChanged;
             searchPanel.Controls.Add(numPriceTo);
             yOffset += 40;
 
+            // Размер экрана
+            lblScreenSize = new Label();
+            lblScreenSize.Text = "📱 РАЗМЕР ЭКРАНА (дюймы)";
+            lblScreenSize.Location = new Point(15, yOffset);
+            lblScreenSize.Size = new Size(390, 25);
+            lblScreenSize.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblScreenSize.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblScreenSize);
+            yOffset += 28;
+
+            Label lblScreenFrom = new Label();
+            lblScreenFrom.Text = "от";
+            lblScreenFrom.Location = new Point(15, yOffset);
+            lblScreenFrom.Size = new Size(30, 25);
+            lblScreenFrom.ForeColor = textColor;
+            searchPanel.Controls.Add(lblScreenFrom);
+
+            numScreenSizeFrom = new NumericUpDown();
+            numScreenSizeFrom.Location = new Point(45, yOffset);
+            numScreenSizeFrom.Size = new Size(150, 27);
+            numScreenSizeFrom.BackColor = darkBg;
+            numScreenSizeFrom.ForeColor = textColor;
+            numScreenSizeFrom.Maximum = 100;
+            searchPanel.Controls.Add(numScreenSizeFrom);
+
+            Label lblScreenTo = new Label();
+            lblScreenTo.Text = "до";
+            lblScreenTo.Location = new Point(205, yOffset);
+            lblScreenTo.Size = new Size(30, 25);
+            lblScreenTo.ForeColor = textColor;
+            searchPanel.Controls.Add(lblScreenTo);
+
+            numScreenSizeTo = new NumericUpDown();
+            numScreenSizeTo.Location = new Point(235, yOffset);
+            numScreenSizeTo.Size = new Size(170, 27);
+            numScreenSizeTo.BackColor = darkBg;
+            numScreenSizeTo.ForeColor = textColor;
+            numScreenSizeTo.Maximum = 100;
+            searchPanel.Controls.Add(numScreenSizeTo);
+            yOffset += 40;
+
+            // Разрешение
+            lblResolution = new Label();
+            lblResolution.Text = "🎯 РАЗРЕШЕНИЕ (поиск по тексту)";
+            lblResolution.Location = new Point(15, yOffset);
+            lblResolution.Size = new Size(390, 25);
+            lblResolution.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblResolution.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblResolution);
+            yOffset += 28;
+
+            txtResolution = new TextBox();
+            txtResolution.Location = new Point(15, yOffset);
+            txtResolution.Size = new Size(390, 30);
+            txtResolution.Font = new Font("Segoe UI", 11);
+            txtResolution.BackColor = darkBg;
+            txtResolution.ForeColor = textColor;
+            txtResolution.BorderStyle = BorderStyle.FixedSingle;
+            txtResolution.PlaceholderText = "например: 1920x1080, 4K, 1280x720";
+            searchPanel.Controls.Add(txtResolution);
+            yOffset += 40;
+
+            // Память
+            lblStorage = new Label();
+            lblStorage.Text = "💾 ОБЪЁМ ПАМЯТИ (ГБ)";
+            lblStorage.Location = new Point(15, yOffset);
+            lblStorage.Size = new Size(390, 25);
+            lblStorage.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblStorage.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblStorage);
+            yOffset += 28;
+
+            chkListStorage = new CheckedListBox();
+            chkListStorage.Location = new Point(15, yOffset);
+            chkListStorage.Size = new Size(390, 60);
+            chkListStorage.BackColor = darkBg;
+            chkListStorage.ForeColor = textColor;
+            chkListStorage.BorderStyle = BorderStyle.FixedSingle;
+            chkListStorage.CheckOnClick = true;
+            searchPanel.Controls.Add(chkListStorage);
+            yOffset += 70;
+
+            // ОЗУ
+            lblRAM = new Label();
+            lblRAM.Text = "🧠 ОЗУ (ГБ)";
+            lblRAM.Location = new Point(15, yOffset);
+            lblRAM.Size = new Size(390, 25);
+            lblRAM.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblRAM.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblRAM);
+            yOffset += 28;
+
+            chkListRAM = new CheckedListBox();
+            chkListRAM.Location = new Point(15, yOffset);
+            chkListRAM.Size = new Size(390, 60);
+            chkListRAM.BackColor = darkBg;
+            chkListRAM.ForeColor = textColor;
+            chkListRAM.BorderStyle = BorderStyle.FixedSingle;
+            chkListRAM.CheckOnClick = true;
+            searchPanel.Controls.Add(chkListRAM);
+            yOffset += 70;
+
+            // Процессор
+            lblProcessor = new Label();
+            lblProcessor.Text = "⚙ ПРОЦЕССОР";
+            lblProcessor.Location = new Point(15, yOffset);
+            lblProcessor.Size = new Size(390, 25);
+            lblProcessor.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblProcessor.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblProcessor);
+            yOffset += 28;
+
+            cmbProcessor = new ComboBox();
+            cmbProcessor.Location = new Point(15, yOffset);
+            cmbProcessor.Size = new Size(390, 30);
+            cmbProcessor.Font = new Font("Segoe UI", 11);
+            cmbProcessor.BackColor = darkBg;
+            cmbProcessor.ForeColor = textColor;
+            cmbProcessor.DropDownStyle = ComboBoxStyle.DropDownList;
+            searchPanel.Controls.Add(cmbProcessor);
+            yOffset += 40;
+
+            // ОС
+            lblOS = new Label();
+            lblOS.Text = "💿 ОПЕРАЦИОННАЯ СИСТЕМА";
+            lblOS.Location = new Point(15, yOffset);
+            lblOS.Size = new Size(390, 25);
+            lblOS.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblOS.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblOS);
+            yOffset += 28;
+
+            cmbOS = new ComboBox();
+            cmbOS.Location = new Point(15, yOffset);
+            cmbOS.Size = new Size(390, 30);
+            cmbOS.Font = new Font("Segoe UI", 11);
+            cmbOS.BackColor = darkBg;
+            cmbOS.ForeColor = textColor;
+            cmbOS.DropDownStyle = ComboBoxStyle.DropDownList;
+            searchPanel.Controls.Add(cmbOS);
+            yOffset += 40;
+
+            // Цвет
+            lblColor = new Label();
+            lblColor.Text = "🎨 ЦВЕТ";
+            lblColor.Location = new Point(15, yOffset);
+            lblColor.Size = new Size(390, 25);
+            lblColor.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblColor.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblColor);
+            yOffset += 28;
+
+            chkListColors = new CheckedListBox();
+            chkListColors.Location = new Point(15, yOffset);
+            chkListColors.Size = new Size(390, 80);
+            chkListColors.BackColor = darkBg;
+            chkListColors.ForeColor = textColor;
+            chkListColors.BorderStyle = BorderStyle.FixedSingle;
+            chkListColors.CheckOnClick = true;
+            searchPanel.Controls.Add(chkListColors);
+            yOffset += 90;
+
+            // МАГАЗИНЫ
             lblShops = new Label();
-            lblShops.Text = "🏪 МАГАЗИНЫ";
+            lblShops.Text = "🏪 МАГАЗИНЫ (выберите несколько)";
             lblShops.Location = new Point(15, yOffset);
-            lblShops.Size = new Size(350, 25);
+            lblShops.Size = new Size(390, 25);
             lblShops.Font = new Font("Segoe UI", 10, FontStyle.Bold);
             lblShops.ForeColor = accentBlue;
             searchPanel.Controls.Add(lblShops);
@@ -272,181 +531,39 @@ namespace CopyOnliner
 
             chkListShops = new CheckedListBox();
             chkListShops.Location = new Point(15, yOffset);
-            chkListShops.Size = new Size(350, 80);
+            chkListShops.Size = new Size(390, 80);
             chkListShops.BackColor = darkBg;
             chkListShops.ForeColor = textColor;
             chkListShops.BorderStyle = BorderStyle.FixedSingle;
-            chkListShops.ItemCheck += (s, e) => TxtSearch_TextChanged(s, e);
+            chkListShops.CheckOnClick = true;
             searchPanel.Controls.Add(chkListShops);
             yOffset += 90;
 
-            groupBoxSpecs = new GroupBox();
-            groupBoxSpecs.Text = "📊 ХАРАКТЕРИСТИКИ";
-            groupBoxSpecs.Location = new Point(15, yOffset);
-            groupBoxSpecs.Size = new Size(350, 280);
-            groupBoxSpecs.ForeColor = accentBlue;
-            groupBoxSpecs.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            searchPanel.Controls.Add(groupBoxSpecs);
-
-            int specYOffset = 25;
-            int specHeight = 28;
-
-            lblScreenSize = new Label();
-            lblScreenSize.Text = "📱 Размер экрана (дюймы):";
-            lblScreenSize.Location = new Point(10, specYOffset);
-            lblScreenSize.Size = new Size(180, 25);
-            lblScreenSize.Font = new Font("Segoe UI", 9);
-            lblScreenSize.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblScreenSize);
-
-            txtScreenSize = new TextBox();
-            txtScreenSize.Location = new Point(195, specYOffset);
-            txtScreenSize.Size = new Size(140, 25);
-            txtScreenSize.Font = new Font("Segoe UI", 9);
-            txtScreenSize.BackColor = darkBg;
-            txtScreenSize.ForeColor = textColor;
-            txtScreenSize.BorderStyle = BorderStyle.FixedSingle;
-            txtScreenSize.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtScreenSize);
-            specYOffset += specHeight;
-
-            lblResolution = new Label();
-            lblResolution.Text = "🎯 Разрешение:";
-            lblResolution.Location = new Point(10, specYOffset);
-            lblResolution.Size = new Size(180, 25);
-            lblResolution.Font = new Font("Segoe UI", 9);
-            lblResolution.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblResolution);
-
-            txtResolution = new TextBox();
-            txtResolution.Location = new Point(195, specYOffset);
-            txtResolution.Size = new Size(140, 25);
-            txtResolution.Font = new Font("Segoe UI", 9);
-            txtResolution.BackColor = darkBg;
-            txtResolution.ForeColor = textColor;
-            txtResolution.BorderStyle = BorderStyle.FixedSingle;
-            txtResolution.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtResolution);
-            specYOffset += specHeight;
-
-            lblStorage = new Label();
-            lblStorage.Text = "💾 Память (ГБ):";
-            lblStorage.Location = new Point(10, specYOffset);
-            lblStorage.Size = new Size(180, 25);
-            lblStorage.Font = new Font("Segoe UI", 9);
-            lblStorage.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblStorage);
-
-            txtStorage = new TextBox();
-            txtStorage.Location = new Point(195, specYOffset);
-            txtStorage.Size = new Size(140, 25);
-            txtStorage.Font = new Font("Segoe UI", 9);
-            txtStorage.BackColor = darkBg;
-            txtStorage.ForeColor = textColor;
-            txtStorage.BorderStyle = BorderStyle.FixedSingle;
-            txtStorage.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtStorage);
-            specYOffset += specHeight;
-
-            lblRAM = new Label();
-            lblRAM.Text = "🧠 ОЗУ (ГБ):";
-            lblRAM.Location = new Point(10, specYOffset);
-            lblRAM.Size = new Size(180, 25);
-            lblRAM.Font = new Font("Segoe UI", 9);
-            lblRAM.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblRAM);
-
-            txtRAM = new TextBox();
-            txtRAM.Location = new Point(195, specYOffset);
-            txtRAM.Size = new Size(140, 25);
-            txtRAM.Font = new Font("Segoe UI", 9);
-            txtRAM.BackColor = darkBg;
-            txtRAM.ForeColor = textColor;
-            txtRAM.BorderStyle = BorderStyle.FixedSingle;
-            txtRAM.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtRAM);
-            specYOffset += specHeight;
-
-            lblProcessor = new Label();
-            lblProcessor.Text = "⚙ Процессор:";
-            lblProcessor.Location = new Point(10, specYOffset);
-            lblProcessor.Size = new Size(180, 25);
-            lblProcessor.Font = new Font("Segoe UI", 9);
-            lblProcessor.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblProcessor);
-
-            txtProcessor = new TextBox();
-            txtProcessor.Location = new Point(195, specYOffset);
-            txtProcessor.Size = new Size(140, 25);
-            txtProcessor.Font = new Font("Segoe UI", 9);
-            txtProcessor.BackColor = darkBg;
-            txtProcessor.ForeColor = textColor;
-            txtProcessor.BorderStyle = BorderStyle.FixedSingle;
-            txtProcessor.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtProcessor);
-            specYOffset += specHeight;
-
-            lblBattery = new Label();
-            lblBattery.Text = "🔋 Батарея (часы):";
-            lblBattery.Location = new Point(10, specYOffset);
-            lblBattery.Size = new Size(180, 25);
-            lblBattery.Font = new Font("Segoe UI", 9);
-            lblBattery.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblBattery);
-
-            txtBattery = new TextBox();
-            txtBattery.Location = new Point(195, specYOffset);
-            txtBattery.Size = new Size(140, 25);
-            txtBattery.Font = new Font("Segoe UI", 9);
-            txtBattery.BackColor = darkBg;
-            txtBattery.ForeColor = textColor;
-            txtBattery.BorderStyle = BorderStyle.FixedSingle;
-            txtBattery.TextChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(txtBattery);
-            specYOffset += specHeight;
-
-            lblOS = new Label();
-            lblOS.Text = "💿 Операционная система:";
-            lblOS.Location = new Point(10, specYOffset);
-            lblOS.Size = new Size(180, 25);
-            lblOS.Font = new Font("Segoe UI", 9);
-            lblOS.ForeColor = textColor;
-            groupBoxSpecs.Controls.Add(lblOS);
-
-            cmbOS = new ComboBox();
-            cmbOS.Location = new Point(195, specYOffset);
-            cmbOS.Size = new Size(140, 25);
-            cmbOS.Font = new Font("Segoe UI", 9);
-            cmbOS.BackColor = darkBg;
-            cmbOS.ForeColor = textColor;
-            cmbOS.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbOS.SelectedIndexChanged += TxtSearch_TextChanged;
-            groupBoxSpecs.Controls.Add(cmbOS);
-
-            yOffset += 290;
-
-            lblSortBy = new Label();
-            lblSortBy.Text = "📊 СОРТИРОВКА (выберите несколько)";
-            lblSortBy.Location = new Point(15, yOffset);
-            lblSortBy.Size = new Size(350, 25);
-            lblSortBy.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            lblSortBy.ForeColor = accentBlue;
-            searchPanel.Controls.Add(lblSortBy);
+            // Сортировка
+            Label lblSort = new Label();
+            lblSort.Text = "📊 СОРТИРОВКА (выберите несколько)";
+            lblSort.Location = new Point(15, yOffset);
+            lblSort.Size = new Size(390, 25);
+            lblSort.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            lblSort.ForeColor = accentBlue;
+            searchPanel.Controls.Add(lblSort);
             yOffset += 28;
 
             chkListSortOptions = new CheckedListBox();
             chkListSortOptions.Location = new Point(15, yOffset);
-            chkListSortOptions.Size = new Size(350, 100);
+            chkListSortOptions.Size = new Size(390, 110);
             chkListSortOptions.BackColor = darkBg;
             chkListSortOptions.ForeColor = textColor;
             chkListSortOptions.BorderStyle = BorderStyle.FixedSingle;
+            chkListSortOptions.CheckOnClick = true;
             chkListSortOptions.Items.AddRange(new string[] {
                 "Бренд", "Модель", "Цена", "Размер экрана", "Разрешение",
-                "Объём памяти", "ОЗУ", "Процессор", "Батарея", "ОС"
+                "Объём памяти", "ОЗУ", "Процессор", "Батарея", "ОС", "Цвет"
             });
             searchPanel.Controls.Add(chkListSortOptions);
-            yOffset += 110;
+            yOffset += 120;
 
+            // Направление сортировки
             rbAscending = new RadioButton();
             rbAscending.Text = "⬆ По возрастанию";
             rbAscending.Location = new Point(15, yOffset);
@@ -463,35 +580,25 @@ namespace CopyOnliner
             searchPanel.Controls.Add(rbDescending);
             yOffset += 35;
 
-            btnApplySort = new Button();
-            btnApplySort.Text = "🔄 Применить сортировку";
-            btnApplySort.Location = new Point(15, yOffset);
-            btnApplySort.Size = new Size(350, 35);
-            btnApplySort.BackColor = accentBlue;
-            btnApplySort.ForeColor = Color.Black;
-            btnApplySort.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            btnApplySort.FlatStyle = FlatStyle.Flat;
-            btnApplySort.Cursor = Cursors.Hand;
-            btnApplySort.Click += BtnApplySort_Click;
-            searchPanel.Controls.Add(btnApplySort);
-            yOffset += 45;
+            // Кнопка применения
+            btnApply = new Button();
+            btnApply.Text = "🔍 ПРИМЕНИТЬ ФИЛЬТРЫ И СОРТИРОВКУ";
+            btnApply.Location = new Point(15, yOffset);
+            btnApply.Size = new Size(390, 50);
+            btnApply.BackColor = accentColor;
+            btnApply.ForeColor = Color.Black;
+            btnApply.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            btnApply.FlatStyle = FlatStyle.Flat;
+            btnApply.Cursor = Cursors.Hand;
+            btnApply.Click += BtnApply_Click;
+            searchPanel.Controls.Add(btnApply);
+            yOffset += 60;
 
-            btnSearch = new Button();
-            btnSearch.Text = "🔍 ПОИСК";
-            btnSearch.Location = new Point(15, yOffset);
-            btnSearch.Size = new Size(170, 45);
-            btnSearch.BackColor = accentColor;
-            btnSearch.ForeColor = Color.Black;
-            btnSearch.Font = new Font("Segoe UI", 11, FontStyle.Bold);
-            btnSearch.FlatStyle = FlatStyle.Flat;
-            btnSearch.Cursor = Cursors.Hand;
-            btnSearch.Click += BtnSearch_Click;
-            searchPanel.Controls.Add(btnSearch);
-
+            // Кнопка сброса
             btnReset = new Button();
-            btnReset.Text = "🔄 СБРОС";
-            btnReset.Location = new Point(195, yOffset);
-            btnReset.Size = new Size(170, 45);
+            btnReset.Text = "🔄 СБРОСИТЬ ВСЕ ФИЛЬТРЫ";
+            btnReset.Location = new Point(15, yOffset);
+            btnReset.Size = new Size(390, 45);
             btnReset.BackColor = Color.FromArgb(60, 60, 70);
             btnReset.ForeColor = textColor;
             btnReset.Font = new Font("Segoe UI", 11, FontStyle.Bold);
@@ -504,7 +611,7 @@ namespace CopyOnliner
             lblResults = new Label();
             lblResults.Text = "📦 Найдено: 0";
             lblResults.Location = new Point(15, yOffset);
-            lblResults.Size = new Size(350, 30);
+            lblResults.Size = new Size(390, 30);
             lblResults.Font = new Font("Segoe UI", 11, FontStyle.Bold);
             lblResults.ForeColor = accentColor;
             lblResults.TextAlign = ContentAlignment.MiddleCenter;
@@ -536,6 +643,8 @@ namespace CopyOnliner
             listView1.DoubleClick += ListView1_DoubleClick;
             listView1.DrawItem += ListView1_DrawItem;
             listView1.TileSize = new Size(CardWidth, CardHeight);
+            listView1.BackColor = darkBg;
+            listView1.Dock = DockStyle.Fill;
         }
 
         private void ListView1_DoubleClick(object sender, EventArgs e)
@@ -548,9 +657,70 @@ namespace CopyOnliner
                 {
                     Form2 detailsForm = new Form2(console);
                     detailsForm.ShowDialog(this);
-                    LoadData();
+                    // НЕ вызываем LoadData() - карточки не перезагружаются
                 }
             }
+        }
+
+        private void BtnProfile_Click(object sender, EventArgs e)
+        {
+            if (CurrentUser != null && CurrentUser.IsLoggedIn)
+            {
+                FormProfile profileForm = new FormProfile(CurrentUser);
+                profileForm.ShowDialog(this);
+            }
+            else
+            {
+                FormLogin loginForm = new FormLogin();
+                if (loginForm.ShowDialog() == DialogResult.OK)
+                {
+                    CurrentUser = loginForm.CurrentUser;
+                    UpdateProfileButton();
+
+                    if (CurrentUser != null && CurrentUser.IsLoggedIn)
+                    {
+                        FormProfile profileForm = new FormProfile(CurrentUser);
+                        profileForm.ShowDialog(this);
+                    }
+                }
+            }
+        }
+
+        private void BtnApply_Click(object sender, EventArgs e)
+        {
+            LoadData();
+        }
+
+        private void BtnReset_Click(object sender, EventArgs e)
+        {
+            listBoxBrands.ClearSelected();
+            txtSearchModel.Text = "";
+            numPriceFrom.Value = 0;
+            numPriceTo.Value = 0;
+            numScreenSizeFrom.Value = 0;
+            numScreenSizeTo.Value = 0;
+            txtResolution.Text = "";
+
+            for (int i = 0; i < chkListStorage.Items.Count; i++)
+                chkListStorage.SetItemChecked(i, false);
+
+            for (int i = 0; i < chkListRAM.Items.Count; i++)
+                chkListRAM.SetItemChecked(i, false);
+
+            for (int i = 0; i < chkListColors.Items.Count; i++)
+                chkListColors.SetItemChecked(i, false);
+
+            for (int i = 0; i < chkListShops.Items.Count; i++)
+                chkListShops.SetItemChecked(i, false);
+
+            for (int i = 0; i < chkListSortOptions.Items.Count; i++)
+                chkListSortOptions.SetItemChecked(i, false);
+
+            cmbProcessor.SelectedIndex = 0;
+            cmbOS.SelectedIndex = 0;
+            rbAscending.Checked = true;
+
+            LoadData();
         }
 
         private void LoadData()
@@ -561,24 +731,15 @@ namespace CopyOnliner
                 listView1.Items.Clear();
                 imageList1.Images.Clear();
 
-                // Простой запрос без JOIN (только из таблицы Consoles)
                 string query = @"
-                    SELECT 
-                        ConsoleID, 
-                        Brand, 
-                        Model, 
-                        Description, 
-                        ImageURL, 
-                        OS, 
-                        Weight, 
-                        BatteryLife, 
-                        ScreenSize, 
-                        Resolution,
-                        Storage, 
-                        RAM, 
-                        Processor,
-                        Price
-                    FROM Consoles
+                    SELECT DISTINCT
+                        c.ConsoleID, c.Brand, c.Model, c.Description, c.ImageURL, 
+                        c.OS, c.Weight, c.BatteryLife, c.ScreenSize, c.Resolution,
+                        c.Storage, c.RAM, c.Processor, c.Price, c.Color,
+                        s.ShopName
+                    FROM (Consoles c 
+                    LEFT JOIN AvailableInShop a ON c.ConsoleID = a.ConsoleID)
+                    LEFT JOIN Shops s ON a.ShopID = s.ShopID
                     WHERE 1=1";
 
                 var selectedBrands = listBoxBrands.SelectedItems;
@@ -590,53 +751,112 @@ namespace CopyOnliner
                         brands += $"'{brand.Replace("'", "''")}',";
                     }
                     brands = brands.TrimEnd(',');
-                    query += $" AND Brand IN ({brands})";
+                    query += $" AND c.Brand IN ({brands})";
                 }
 
                 if (!string.IsNullOrWhiteSpace(txtSearchModel.Text))
                 {
-                    query += $" AND Model LIKE '%{txtSearchModel.Text.Replace("'", "''")}%'";
+                    query += $" AND c.Model LIKE '%{txtSearchModel.Text.Replace("'", "''")}%'";
                 }
 
                 if (numPriceFrom.Value > 0)
                 {
-                    query += $" AND Price >= {numPriceFrom.Value}";
+                    query += $" AND c.Price >= {numPriceFrom.Value}";
                 }
                 if (numPriceTo.Value > 0)
                 {
-                    query += $" AND Price <= {numPriceTo.Value}";
+                    query += $" AND c.Price <= {numPriceTo.Value}";
                 }
 
-                if (!string.IsNullOrWhiteSpace(txtScreenSize.Text))
+                if (numScreenSizeFrom.Value > 0)
                 {
-                    query += $" AND ScreenSize LIKE '%{txtScreenSize.Text.Replace("'", "''")}%'";
+                    query += $" AND c.ScreenSize >= {numScreenSizeFrom.Value}";
                 }
+                if (numScreenSizeTo.Value > 0)
+                {
+                    query += $" AND c.ScreenSize <= {numScreenSizeTo.Value}";
+                }
+
                 if (!string.IsNullOrWhiteSpace(txtResolution.Text))
                 {
-                    query += $" AND Resolution LIKE '%{txtResolution.Text.Replace("'", "''")}%'";
-                }
-                if (!string.IsNullOrWhiteSpace(txtStorage.Text))
-                {
-                    query += $" AND Storage LIKE '%{txtStorage.Text.Replace("'", "''")}%'";
-                }
-                if (!string.IsNullOrWhiteSpace(txtRAM.Text))
-                {
-                    query += $" AND RAM LIKE '%{txtRAM.Text.Replace("'", "''")}%'";
-                }
-                if (!string.IsNullOrWhiteSpace(txtProcessor.Text))
-                {
-                    query += $" AND Processor LIKE '%{txtProcessor.Text.Replace("'", "''")}%'";
-                }
-                if (!string.IsNullOrWhiteSpace(txtBattery.Text))
-                {
-                    query += $" AND BatteryLife LIKE '%{txtBattery.Text.Replace("'", "''")}%'";
-                }
-                if (cmbOS.SelectedIndex > 0 && cmbOS.SelectedItem.ToString() != "Все")
-                {
-                    query += $" AND OS LIKE '%{cmbOS.SelectedItem.ToString().Replace("'", "''")}%'";
+                    query += $" AND c.Resolution LIKE '%{txtResolution.Text.Replace("'", "''")}%'";
                 }
 
-                // Сортировка
+                var selectedStorage = new List<string>();
+                foreach (var item in chkListStorage.CheckedItems)
+                {
+                    selectedStorage.Add(item.ToString());
+                }
+                if (selectedStorage.Count > 0)
+                {
+                    string storageList = "";
+                    foreach (string storage in selectedStorage)
+                    {
+                        storageList += $"'{storage.Replace("'", "''")}',";
+                    }
+                    storageList = storageList.TrimEnd(',');
+                    query += $" AND c.Storage IN ({storageList})";
+                }
+
+                var selectedRAM = new List<string>();
+                foreach (var item in chkListRAM.CheckedItems)
+                {
+                    selectedRAM.Add(item.ToString());
+                }
+                if (selectedRAM.Count > 0)
+                {
+                    string ramList = "";
+                    foreach (string ram in selectedRAM)
+                    {
+                        ramList += $"'{ram.Replace("'", "''")}',";
+                    }
+                    ramList = ramList.TrimEnd(',');
+                    query += $" AND c.RAM IN ({ramList})";
+                }
+
+                if (cmbProcessor.SelectedIndex > 0 && cmbProcessor.SelectedItem.ToString() != "Все")
+                {
+                    query += $" AND c.Processor LIKE '%{cmbProcessor.SelectedItem.ToString().Replace("'", "''")}%'";
+                }
+
+                if (cmbOS.SelectedIndex > 0 && cmbOS.SelectedItem.ToString() != "Все")
+                {
+                    query += $" AND c.OS LIKE '%{cmbOS.SelectedItem.ToString().Replace("'", "''")}%'";
+                }
+
+                var selectedColors = new List<string>();
+                foreach (var item in chkListColors.CheckedItems)
+                {
+                    selectedColors.Add(item.ToString());
+                }
+                if (selectedColors.Count > 0)
+                {
+                    string colorList = "";
+                    foreach (string color in selectedColors)
+                    {
+                        colorList += $"'{color.Replace("'", "''")}',";
+                    }
+                    colorList = colorList.TrimEnd(',');
+                    query += $" AND c.Color IN ({colorList})";
+                }
+
+                // ФИЛЬТР ПО МАГАЗИНАМ
+                var selectedShops = new List<string>();
+                foreach (var item in chkListShops.CheckedItems)
+                {
+                    selectedShops.Add(item.ToString());
+                }
+                if (selectedShops.Count > 0)
+                {
+                    string shopList = "";
+                    foreach (string shop in selectedShops)
+                    {
+                        shopList += $"'{shop.Replace("'", "''")}',";
+                    }
+                    shopList = shopList.TrimEnd(',');
+                    query += $" AND s.ShopName IN ({shopList})";
+                }
+
                 string orderBy = BuildOrderByClause();
                 if (!string.IsNullOrEmpty(orderBy))
                 {
@@ -644,18 +864,25 @@ namespace CopyOnliner
                 }
                 else
                 {
-                    query += " ORDER BY Brand, Model";
+                    query += " ORDER BY c.ConsoleID";
                 }
 
                 OleDbCommand command = new OleDbCommand(query, myConnection);
                 OleDbDataReader reader = command.ExecuteReader();
 
                 int imageIndex = 0;
+                var processedConsoles = new HashSet<int>();
 
                 while (reader.Read())
                 {
+                    int consoleId = Convert.ToInt32(reader["ConsoleID"]);
+
+                    if (processedConsoles.Contains(consoleId))
+                        continue;
+                    processedConsoles.Add(consoleId);
+
                     ConsoleItem console = new ConsoleItem();
-                    console.ConsoleId = Convert.ToInt32(reader["ConsoleID"]);
+                    console.ConsoleId = consoleId;
                     console.Brand = reader["Brand"]?.ToString() ?? "";
                     console.Model = reader["Model"]?.ToString() ?? "";
                     console.Description = reader["Description"]?.ToString() ?? "";
@@ -668,9 +895,9 @@ namespace CopyOnliner
                     console.RAM = reader["RAM"] != DBNull.Value ? reader["RAM"].ToString() : "";
                     console.Processor = reader["Processor"] != DBNull.Value ? reader["Processor"].ToString() : "";
                     console.Price = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0;
-                    console.ShopName = "Не указан";
+                    console.Color = reader["Color"] != DBNull.Value ? reader["Color"].ToString() : "";
+                    console.ShopName = reader["ShopName"] != DBNull.Value ? reader["ShopName"].ToString() : "Не указан";
 
-                    // Загрузка изображения
                     try
                     {
                         if (!string.IsNullOrEmpty(console.ImageURL) && (console.ImageURL.StartsWith("http") || console.ImageURL.StartsWith("https")))
@@ -700,9 +927,10 @@ namespace CopyOnliner
                         imageList1.Images.Add(console.Image);
                     }
 
-                    // Формирование строки с ценой и характеристиками
                     string priceText = console.Price > 0 ? $"💰 {console.Price:N0} ₽" : "💰 Цена не указана";
-                    string specs = $"📱 {console.ScreenSize}\" | 🎯 {console.Resolution} | 💾 {console.Storage}GB | 🧠 {console.RAM}GB";
+                    string colorText = !string.IsNullOrEmpty(console.Color) ? $"🎨 {console.Color}" : "";
+                    string shopText = !string.IsNullOrEmpty(console.ShopName) && console.ShopName != "Не указан" ? $"🏪 {console.ShopName}" : "";
+                    string specs = $"📱 {console.ScreenSize}\" | 🎯 {console.Resolution} | 💾 {console.Storage}GB | 🧠 {console.RAM}GB | {colorText} | {shopText}";
 
                     ListViewItem item = new ListViewItem();
                     item.Text = $"{console.Brand} {console.Model}\n{priceText}\n{specs}";
@@ -738,34 +966,37 @@ namespace CopyOnliner
                 switch (field)
                 {
                     case "Бренд":
-                        orderByFields.Add($"Brand {sortOrder}");
+                        orderByFields.Add($"c.Brand {sortOrder}");
                         break;
                     case "Модель":
-                        orderByFields.Add($"Model {sortOrder}");
+                        orderByFields.Add($"c.Model {sortOrder}");
                         break;
                     case "Цена":
-                        orderByFields.Add($"Price {sortOrder}");
+                        orderByFields.Add($"c.Price {sortOrder}");
                         break;
                     case "Размер экрана":
-                        orderByFields.Add($"ScreenSize {sortOrder}");
+                        orderByFields.Add($"c.ScreenSize {sortOrder}");
                         break;
                     case "Разрешение":
-                        orderByFields.Add($"Resolution {sortOrder}");
+                        orderByFields.Add($"c.Resolution {sortOrder}");
                         break;
                     case "Объём памяти":
-                        orderByFields.Add($"Storage {sortOrder}");
+                        orderByFields.Add($"c.Storage {sortOrder}");
                         break;
                     case "ОЗУ":
-                        orderByFields.Add($"RAM {sortOrder}");
+                        orderByFields.Add($"c.RAM {sortOrder}");
                         break;
                     case "Процессор":
-                        orderByFields.Add($"Processor {sortOrder}");
+                        orderByFields.Add($"c.Processor {sortOrder}");
                         break;
                     case "Батарея":
-                        orderByFields.Add($"BatteryLife {sortOrder}");
+                        orderByFields.Add($"c.BatteryLife {sortOrder}");
                         break;
                     case "ОС":
-                        orderByFields.Add($"OS {sortOrder}");
+                        orderByFields.Add($"c.OS {sortOrder}");
+                        break;
+                    case "Цвет":
+                        orderByFields.Add($"c.Color {sortOrder}");
                         break;
                 }
             }
@@ -806,11 +1037,11 @@ namespace CopyOnliner
 
             var demos = new[]
             {
-                new { Brand = "Sony", Model = "PlayStation 5", Price = 49999, ScreenSize = "N/A", Resolution = "4K", Storage = "825", RAM = "16", Processor = "AMD Zen 2", BatteryLife = "N/A", OS = "PlayStation OS", Shop = "GAMEPARK", Description = "Новейшая консоль Sony" },
-                new { Brand = "Microsoft", Model = "Xbox Series X", Price = 45999, ScreenSize = "N/A", Resolution = "4K", Storage = "1024", RAM = "16", Processor = "AMD Zen 2", BatteryLife = "N/A", OS = "Xbox OS", Shop = "Agroup", Description = "Самая мощная консоль Xbox" },
-                new { Brand = "Nintendo", Model = "Switch OLED", Price = 29999, ScreenSize = "7", Resolution = "1280x720", Storage = "64", RAM = "4", Processor = "NVIDIA Tegra", BatteryLife = "4-9", OS = "Nintendo OS", Shop = "Newton", Description = "Гибридная консоль" },
-                new { Brand = "Valve", Model = "Steam Deck", Price = 39999, ScreenSize = "7", Resolution = "1280x800", Storage = "512", RAM = "16", Processor = "AMD APU", BatteryLife = "2-8", OS = "SteamOS", Shop = "GAMEPARK", Description = "Портативный компьютер" },
-                new { Brand = "ASUS", Model = "ROG Ally", Price = 44999, ScreenSize = "7", Resolution = "1920x1080", Storage = "512", RAM = "16", Processor = "AMD Z1 Extreme", BatteryLife = "3-6", OS = "Windows 11", Shop = "Agroup", Description = "Игровая портативная консоль" }
+                new { Brand = "Sony", Model = "PlayStation 5", Price = 49999, ScreenSize = "N/A", Resolution = "4K", Storage = "825", RAM = "16", Processor = "AMD Zen 2", BatteryLife = "N/A", OS = "PlayStation OS", Color = "Белый", Shop = "GAMEPARK", Description = "Новейшая консоль Sony" },
+                new { Brand = "Microsoft", Model = "Xbox Series X", Price = 45999, ScreenSize = "N/A", Resolution = "4K", Storage = "1024", RAM = "16", Processor = "AMD Zen 2", BatteryLife = "N/A", OS = "Xbox OS", Color = "Черный", Shop = "Agroup", Description = "Самая мощная консоль Xbox" },
+                new { Brand = "Nintendo", Model = "Switch OLED", Price = 29999, ScreenSize = "7", Resolution = "1280x720", Storage = "64", RAM = "4", Processor = "NVIDIA Tegra", BatteryLife = "4-9", OS = "Nintendo OS", Color = "Красный", Shop = "Newton", Description = "Гибридная консоль" },
+                new { Brand = "Valve", Model = "Steam Deck", Price = 39999, ScreenSize = "7", Resolution = "1280x800", Storage = "512", RAM = "16", Processor = "AMD APU", BatteryLife = "2-8", OS = "SteamOS", Color = "Черный", Shop = "GAMEPARK", Description = "Портативный компьютер" },
+                new { Brand = "ASUS", Model = "ROG Ally", Price = 44999, ScreenSize = "7", Resolution = "1920x1080", Storage = "512", RAM = "16", Processor = "AMD Z1 Extreme", BatteryLife = "3-6", OS = "Windows 11", Color = "Белый", Shop = "Agroup", Description = "Игровая портативная консоль" }
             };
 
             int imageIndex = 0;
@@ -821,7 +1052,6 @@ namespace CopyOnliner
                 console.Brand = demo.Brand;
                 console.Model = demo.Model;
                 console.Price = demo.Price;
-                console.ShopName = demo.Shop;
                 console.Description = demo.Description;
                 console.OS = demo.OS;
                 console.BatteryLife = demo.BatteryLife;
@@ -830,12 +1060,16 @@ namespace CopyOnliner
                 console.Storage = demo.Storage;
                 console.RAM = demo.RAM;
                 console.Processor = demo.Processor;
+                console.Color = demo.Color;
+                console.ShopName = demo.Shop;
                 console.Image = CreateBrandPlaceholderImage(demo.Brand);
 
                 imageList1.Images.Add(console.Image);
 
                 string priceText = console.Price > 0 ? $"💰 {console.Price:N0} ₽" : "💰 Цена не указана";
-                string specs = $"📱 {console.ScreenSize}\" | 🎯 {console.Resolution} | 💾 {console.Storage}GB | 🧠 {console.RAM}GB";
+                string colorText = !string.IsNullOrEmpty(console.Color) ? $"🎨 {console.Color}" : "";
+                string shopText = !string.IsNullOrEmpty(console.ShopName) ? $"🏪 {console.ShopName}" : "";
+                string specs = $"📱 {console.ScreenSize}\" | 🎯 {console.Resolution} | 💾 {console.Storage}GB | 🧠 {console.RAM}GB | {colorText} | {shopText}";
 
                 ListViewItem item = new ListViewItem();
                 item.Text = $"{demo.Brand} {demo.Model}\n{priceText}\n{specs}";
@@ -869,7 +1103,7 @@ namespace CopyOnliner
             if (e.Item.ImageIndex != -1 && imageList1.Images.Count > e.Item.ImageIndex)
             {
                 Image img = imageList1.Images[e.Item.ImageIndex];
-                Rectangle imageRect = new Rectangle(bounds.X + 10, bounds.Y + 10, bounds.Width - 20, 180);
+                Rectangle imageRect = new Rectangle(bounds.X + 10, bounds.Y + 10, bounds.Width - 20, 160);
                 e.Graphics.DrawImage(img, imageRect);
             }
 
@@ -879,53 +1113,26 @@ namespace CopyOnliner
             using (Font specsFont = new Font("Segoe UI", 8))
             using (SolidBrush titleBrush = new SolidBrush(textColor))
             using (SolidBrush priceBrush = new SolidBrush(accentColor))
-            using (SolidBrush specsBrush = new SolidBrush(Color.FromArgb(180, 180, 180)))
+            using (SolidBrush specsBrush = new SolidBrush(Color.FromArgb(150, 150, 150)))
             {
                 if (textLines.Length > 0)
                 {
                     e.Graphics.DrawString(textLines[0], titleFont, titleBrush,
-                        new RectangleF(bounds.X + 10, bounds.Y + 200, bounds.Width - 20, 30));
+                        new RectangleF(bounds.X + 10, bounds.Y + 180, bounds.Width - 20, 30));
                 }
                 if (textLines.Length > 1)
                 {
                     e.Graphics.DrawString(textLines[1], priceFont, priceBrush,
-                        new RectangleF(bounds.X + 10, bounds.Y + 225, bounds.Width - 20, 30));
+                        new RectangleF(bounds.X + 10, bounds.Y + 205, bounds.Width - 20, 30));
                 }
                 if (textLines.Length > 2)
                 {
                     e.Graphics.DrawString(textLines[2], specsFont, specsBrush,
-                        new RectangleF(bounds.X + 10, bounds.Y + 250, bounds.Width - 20, 40));
+                        new RectangleF(bounds.X + 10, bounds.Y + 230, bounds.Width - 20, 60));
                 }
             }
 
             e.DrawDefault = false;
-        }
-
-        private void BtnSearch_Click(object sender, EventArgs e) => LoadData();
-        private void BtnApplySort_Click(object sender, EventArgs e) => LoadData();
-
-        private void BtnReset_Click(object sender, EventArgs e)
-        {
-            listBoxBrands.ClearSelected();
-            txtSearchModel.Text = "";
-            numPriceFrom.Value = 0;
-            numPriceTo.Value = 0;
-            txtScreenSize.Text = "";
-            txtResolution.Text = "";
-            txtStorage.Text = "";
-            txtRAM.Text = "";
-            txtProcessor.Text = "";
-            txtBattery.Text = "";
-            cmbOS.SelectedIndex = 0;
-
-            for (int i = 0; i < chkListShops.Items.Count; i++)
-                chkListShops.SetItemChecked(i, false);
-
-            for (int i = 0; i < chkListSortOptions.Items.Count; i++)
-                chkListSortOptions.SetItemChecked(i, false);
-
-            rbAscending.Checked = true;
-            LoadData();
         }
 
         private void TxtSearch_TextChanged(object sender, EventArgs e)
@@ -939,11 +1146,8 @@ namespace CopyOnliner
 
         private void SearchTimer_Tick(object sender, EventArgs e)
         {
-            if (searchTimer != null)
-            {
-                searchTimer.Stop();
-                LoadData();
-            }
+            searchTimer.Stop();
+            LoadData();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -988,13 +1192,7 @@ namespace CopyOnliner
         public string Storage { get; set; }
         public string RAM { get; set; }
         public string Processor { get; set; }
+        public string Color { get; set; }
         public Image Image { get; set; }
-    }
-
-    public class ShopItem
-    {
-        public int ShopID { get; set; }
-        public string ShopName { get; set; }
-        public override string ToString() => ShopName;
     }
 }

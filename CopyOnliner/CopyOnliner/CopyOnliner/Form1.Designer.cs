@@ -39,6 +39,7 @@
             this.ResumeLayout(false);
         }
 
+        //private DoubleBufferedListView listView1;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ImageList imageList1;
     }

@@ -2,6 +2,8 @@
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
+using System.Text.RegularExpressions;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace CopyOnliner
@@ -124,7 +126,8 @@ namespace CopyOnliner
             txtCustomerName.BackColor = darkBg;
             txtCustomerName.ForeColor = textColor;
             txtCustomerName.BorderStyle = BorderStyle.FixedSingle;
-            txtCustomerName.PlaceholderText = "Введите ваше имя";
+            txtCustomerName.PlaceholderText = "Введите ваше имя (только буквы)";
+            txtCustomerName.KeyPress += TxtCustomerName_KeyPress;
             infoPanel.Controls.Add(txtCustomerName);
             yOffset += 45;
 
@@ -138,7 +141,8 @@ namespace CopyOnliner
             txtCustomerPhone.BackColor = darkBg;
             txtCustomerPhone.ForeColor = textColor;
             txtCustomerPhone.BorderStyle = BorderStyle.FixedSingle;
-            txtCustomerPhone.PlaceholderText = "Введите ваш телефон";
+            txtCustomerPhone.PlaceholderText = "Введите ваш телефон (только цифры и +, -, (, ), пробел)";
+            txtCustomerPhone.KeyPress += TxtCustomerPhone_KeyPress;
             infoPanel.Controls.Add(txtCustomerPhone);
             yOffset += 45;
 
@@ -182,6 +186,26 @@ namespace CopyOnliner
             infoPanel.Controls.Add(btnOrder);
 
             this.Controls.Add(infoPanel);
+        }
+
+        private void TxtCustomerName_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Разрешаем: буквы (латиница и кириллица), пробел, дефис, точка, Backspace
+            if (!char.IsLetter(e.KeyChar) && e.KeyChar != ' ' && e.KeyChar != '-' &&
+                e.KeyChar != '.' && e.KeyChar != (char)Keys.Back)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TxtCustomerPhone_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Разрешаем: цифры, +, -, (, ), пробел, Backspace
+            if (!char.IsDigit(e.KeyChar) && e.KeyChar != '+' && e.KeyChar != '-' &&
+                e.KeyChar != '(' && e.KeyChar != ')' && e.KeyChar != ' ' && e.KeyChar != (char)Keys.Back)
+            {
+                e.Handled = true;
+            }
         }
 
         private void NumQuantity_ValueChanged(object sender, EventArgs e)
@@ -234,6 +258,7 @@ namespace CopyOnliner
 
         private void BtnOrder_Click(object sender, EventArgs e)
         {
+            // Проверка цены
             if (consoleItem.Price <= 0)
             {
                 MessageBox.Show("Цена на данный товар не указана. Заказ невозможен.",
@@ -241,7 +266,9 @@ namespace CopyOnliner
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCustomerName.Text))
+            // Проверка имени (только буквы, пробелы и дефисы)
+            string customerName = txtCustomerName.Text.Trim();
+            if (string.IsNullOrWhiteSpace(customerName))
             {
                 MessageBox.Show("Пожалуйста, введите ваше имя!",
                     "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -249,11 +276,48 @@ namespace CopyOnliner
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCustomerPhone.Text))
+            // Валидация имени
+            Regex nameRegex = new Regex(@"^[a-zA-Zа-яА-ЯёЁ\s\-\.]+$");
+            if (!nameRegex.IsMatch(customerName))
+            {
+                MessageBox.Show("Имя должно содержать только буквы, пробелы, дефисы и точки!\n" +
+                               "Цифры и специальные символы не допускаются.",
+                    "Ошибка ввода", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtCustomerName.Focus();
+                txtCustomerName.SelectAll();
+                return;
+            }
+
+            // Проверка телефона
+            string customerPhone = txtCustomerPhone.Text.Trim();
+            if (string.IsNullOrWhiteSpace(customerPhone))
             {
                 MessageBox.Show("Пожалуйста, введите ваш телефон!",
                     "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtCustomerPhone.Focus();
+                return;
+            }
+
+            // Валидация телефона
+            Regex phoneRegex = new Regex(@"^[\d\s\+\(\)\-]+$");
+            if (!phoneRegex.IsMatch(customerPhone))
+            {
+                MessageBox.Show("Телефон должен содержать только цифры и символы: +, -, (, ), пробел!\n" +
+                               "Буквы и другие символы не допускаются.",
+                    "Ошибка ввода", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtCustomerPhone.Focus();
+                txtCustomerPhone.SelectAll();
+                return;
+            }
+
+            // Проверка количества цифр в телефоне
+            int digitCount = customerPhone.Count(char.IsDigit);
+            if (digitCount < 5)
+            {
+                MessageBox.Show("Введите корректный номер телефона (минимум 5 цифр)!",
+                    "Ошибка ввода", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtCustomerPhone.Focus();
+                txtCustomerPhone.SelectAll();
                 return;
             }
 
@@ -264,8 +328,8 @@ namespace CopyOnliner
                 $"Цена за единицу: {consoleItem.Price:N0} ₽\n" +
                 $"Количество: {numQuantity.Value}\n" +
                 $"Общая сумма: {totalPrice:N0} ₽\n\n" +
-                $"Покупатель: {txtCustomerName.Text}\n" +
-                $"Телефон: {txtCustomerPhone.Text}\n\n" +
+                $"Покупатель: {customerName}\n" +
+                $"Телефон: {customerPhone}\n\n" +
                 $"Продолжить оформление?",
                 "Подтверждение заказа",
                 MessageBoxButtons.YesNo,
@@ -273,11 +337,11 @@ namespace CopyOnliner
 
             if (result == DialogResult.Yes)
             {
-                SaveOrderToDatabase(totalPrice);
+                SaveOrderToDatabase(totalPrice, customerName, customerPhone);
             }
         }
 
-        private void SaveOrderToDatabase(decimal totalPrice)
+        private void SaveOrderToDatabase(decimal totalPrice, string customerName, string customerPhone)
         {
             try
             {
@@ -291,17 +355,17 @@ namespace CopyOnliner
                 string consoleName = $"{consoleItem.Brand} {consoleItem.Model}";
                 int quantity = (int)numQuantity.Value;
 
-                // Используем квадратные скобки для зарезервированных слов
+                // Вставляем заказ (OrderID генерируется автоматически как счетчик)
                 string insertQuery = @"
-                    INSERT INTO Orders ([ConsoleName], [Count], [Price], [CustomersID], [ShopID])
+                    INSERT INTO Orders (ConsoleName, Count, Price, CustomersID, ShopID)
                     VALUES (?, ?, ?, ?, ?)";
 
                 OleDbCommand command = new OleDbCommand(insertQuery, connection);
                 command.Parameters.AddWithValue("?", consoleName);
                 command.Parameters.AddWithValue("?", quantity);
                 command.Parameters.AddWithValue("?", totalPrice);
-                command.Parameters.AddWithValue("?", 0);  // CustomersID
-                command.Parameters.AddWithValue("?", 1);  // ShopID
+                command.Parameters.AddWithValue("?", 0);
+                command.Parameters.AddWithValue("?", 1);
 
                 int rowsAffected = command.ExecuteNonQuery();
 
@@ -312,7 +376,9 @@ namespace CopyOnliner
                         $"Товар: {consoleName}\n" +
                         $"Количество: {quantity}\n" +
                         $"Сумма: {totalPrice:N0} ₽\n\n" +
-                        $"Мы свяжемся с вами по телефону {txtCustomerPhone.Text}",
+                        $"Покупатель: {customerName}\n" +
+                        $"Телефон: {customerPhone}\n\n" +
+                        $"Мы свяжемся с вами для подтверждения заказа.",
                         "Заказ оформлен",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
