@@ -2,71 +2,47 @@
 {
     partial class Form1
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            listView1 = new ListView();
-            Icon = new ColumnHeader();
-            imageList1 = new ImageList(components);
-            SuspendLayout();
-            // 
+            listView1 = new System.Windows.Forms.ListView();
+            imageList1 = new System.Windows.Forms.ImageList(components);
+            this.SuspendLayout();
+
             // listView1
-            // 
-            listView1.Columns.AddRange(new ColumnHeader[] { Icon });
-            listView1.Location = new Point(191, 56);
+            listView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            listView1.Location = new System.Drawing.Point(0, 0);
             listView1.Name = "listView1";
-            listView1.Size = new Size(609, 420);
+            listView1.Size = new System.Drawing.Size(1200, 700);
             listView1.TabIndex = 0;
             listView1.UseCompatibleStateImageBehavior = false;
-            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;
-            // 
+
             // imageList1
-            // 
-            imageList1.ColorDepth = ColorDepth.Depth32Bit;
-            imageList1.ImageSize = new Size(16, 16);
-            imageList1.TransparentColor = Color.Transparent;
-            // 
+            imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            imageList1.ImageSize = new System.Drawing.Size(80, 80);
+            imageList1.TransparentColor = System.Drawing.Color.Transparent;
+
             // Form1
-            // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 476);
-            Controls.Add(listView1);
-            Name = "Form1";
-            Text = "Form1";
-            FormClosing += Form1_FormClosing;
-            Load += Form1_Load;
-            ResumeLayout(false);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1200, 700);
+            this.Controls.Add(listView1);
+            this.Name = "Form1";
+            //this.Text = "GAMER CATALOG";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.ResumeLayout(false);
         }
 
-        #endregion
-
-        private ListView listView1;
-        private ColumnHeader Icon;
-        private ImageList imageList1;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ImageList imageList1;
     }
 }
